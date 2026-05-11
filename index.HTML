@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adesh Navale – System Administrator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060d06;
+    --bg2: #0c180c;
+    --green: #00e676;
+    --green2: #00c853;
+    --green-dim: #1aff6e;
+    --amber: #ffc107;
+    --text: #c8e6c9;
+    --muted: #558b2f;
+    --border: rgba(0,230,118,0.12);
+    --card: rgba(0,230,118,0.04);
+    --card-hover: rgba(0,230,118,0.09);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── Matrix canvas ── */
+  #matrix-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  /* ── Scanline overlay ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ── Radial glow at top ── */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 600px;
+    background: radial-gradient(ellipse, rgba(0,230,118,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2.5rem;
+    height: 64px;
+    background: rgba(6,13,6,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    color: var(--green);
+    letter-spacing: 0.05em;
+  }
+
+  .nav-logo::before { content: '> '; opacity: 0.5; }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--green); }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 8rem 2.5rem 5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4rem;
+    align-items: center;
+    width: 100%;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0,230,118,0.08);
+    border: 1px solid rgba(0,230,118,0.3);
+    color: var(--green);
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.8rem, 5vw, 4.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.2rem;
+    color: #e8f5e9;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--green);
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 520px;
+    margin-bottom: 2.5rem;
+    line-height: 1.75;
+    color: #81c784;
+  }
+
+  .hero-contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .contact-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 0.45rem 1rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: #81c784;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .contact-chip:hover {
+    background: var(--card-hover);
+    color: var(--green);
+    border-color: rgba(0,230,118,0.35);
+  }
+
+  .contact-chip svg { width: 14px; height: 14px; stroke: var(--green); flex-shrink: 0; }
+
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .stat-item { text-align: center; }
+
+  .stat-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--green);
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(0,230,118,0.4);
+  }
+
+  .stat-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Avatar card */
+  .avatar-card {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .avatar-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+  }
+
+  .avatar-circle {
+    width: 90px;
+    height: 90px;
+    background: rgba(0,230,118,0.1);
+    border: 2px solid rgba(0,230,118,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--green);
+    margin: 0 auto 1rem;
+    text-shadow: 0 0 16px rgba(0,230,118,0.6);
+  }
+
+  .avatar-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #e8f5e9;
+    margin-bottom: 0.3rem;
+  }
+
+  .avatar-role {
+    font-size: 0.72rem;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .avatar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.2rem 0;
+  }
+
+  .avatar-location {
+    font-size: 0.78rem;
+    color: #81c784;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Section wrapper ── */
+  .section {
+    position: relative;
+    z-index: 2;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 5rem 2.5rem;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 1rem;
+  }
+
+  .section-label::before {
+    content: '//';
+    opacity: 0.5;
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    color: #e8f5e9;
+    margin-bottom: 3rem;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── Skills grid ── */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .skill-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    transition: all 0.25s;
+    cursor: default;
+  }
+
+  .skill-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(0,230,118,0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 0 16px rgba(0,230,118,0.08);
+  }
+
+  .skill-icon {
+    width: 32px; height: 32px;
+    background: rgba(0,230,118,0.08);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+
+  .skill-name {
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: #a5d6a7;
+  }
+
+  /* ── Experience ── */
+  .exp-timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .exp-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--green), transparent);
+    opacity: 0.4;
+  }
+
+  .exp-item {
+    position: relative;
+    margin-bottom: 3rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    transition: border-color 0.25s;
+  }
+
+  .exp-item:hover {
+    border-color: rgba(0,230,118,0.3);
+    box-shadow: 0 0 24px rgba(0,230,118,0.05);
+  }
+
+  .exp-item::before {
+    content: '';
+    position: absolute;
+    left: -2.55rem;
+    top: 1.8rem;
+    width: 10px; height: 10px;
+    background: var(--green);
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(0,230,118,0.6);
+  }
+
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.4rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .exp-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    color: #e8f5e9;
+  }
+
+  .exp-badge {
+    background: rgba(0,230,118,0.08);
+    border: 1px solid rgba(0,230,118,0.25);
+    color: var(--green);
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .exp-company {
+    color: #66bb6a;
+    font-size: 0.88rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 1.2rem;
+  }
+
+  .exp-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .exp-bullets li {
+    display: flex;
+    gap: 0.7rem;
+    font-size: 0.9rem;
+    color: #81c784;
+    line-height: 1.6;
+  }
+
+  .exp-bullets li::before {
+    content: '$';
+    color: var(--green);
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    margin-top: 0.1rem;
+    opacity: 0.7;
+  }
+
+  .exp-bullets strong { color: #c8e6c9; font-weight: 600; }
+
+  /* ── Achievements ── */
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.2rem;
+  }
+
+  .ach-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ach-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,230,118,0.3), transparent);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+  }
+
+  .ach-card:hover::after { transform: scaleX(1); }
+
+  .ach-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(0,230,118,0.3);
+    transform: translateY(-3px);
+  }
+
+  .ach-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .ach-title {
+    font-weight: 600;
+    color: #c8e6c9;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .ach-desc {
+    font-size: 0.82rem;
+    color: #81c784;
+    line-height: 1.6;
+  }
+
+  /* ── Education & Certs ── */
+  .edu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .edu-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.8rem;
+    transition: border-color 0.25s;
+  }
+
+  .edu-card:hover { border-color: rgba(0,230,118,0.3); }
+
+  .edu-degree {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: #e8f5e9;
+    margin-bottom: 0.3rem;
+  }
+
+  .edu-school {
+    color: var(--green);
+    font-size: 0.83rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 0.4rem;
+  }
+
+  .edu-year {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .cert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .cert-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.4rem;
+    transition: all 0.25s;
+  }
+
+  .cert-item:hover {
+    background: var(--card-hover);
+    border-color: rgba(0,230,118,0.3);
+  }
+
+  .cert-dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(0,230,118,0.6);
+  }
+
+  .cert-name {
+    font-weight: 500;
+    font-size: 0.88rem;
+    color: #a5d6a7;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 2.5rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Footer ── */
+  footer {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 3rem 2.5rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    border-top: 1px solid var(--border);
+  }
+
+  footer span { color: var(--green); }
+
+  /* ── Animations ── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* hero z-index */
+  .hero { position: relative; z-index: 2; }
+
+  @media (max-width: 768px) {
+    .hero-inner { grid-template-columns: 1fr; }
+    .avatar-card { width: 100%; }
+    .edu-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    nav { padding: 0 1.5rem; }
+    .section { padding: 3.5rem 1.5rem; }
+    h1 { font-size: 2.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Matrix canvas -->
+<canvas id="matrix-canvas"></canvas>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">adesh@sysadmin:~$</div>
+  <ul class="nav-links">
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#achievements">Achievements</a></li>
+    <li><a href="#education">Education</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-tag">Available for opportunities</div>
+      <h1>Adesh<br><em>Navale</em></h1>
+      <p class="hero-subtitle">
+        System Administrator with 2+ years managing enterprise infrastructure, cloud platforms, and security systems. Passionate about keeping systems running, secure, and efficient.
+      </p>
+      <div class="hero-contacts">
+        <a href="mailto:adeshnavle3@gmail.com" class="contact-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>
+          adeshnavle3@gmail.com
+        </a>
+        <a href="tel:+919529714766" class="contact-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.11 1.18 2 2 0 012.11 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.59 8.09a16 16 0 006.29 6.29l1.45-1.77a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+          +91 9529714766
+        </a>
+        <a class="contact-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Pune, India
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">2+</div>
+          <div class="stat-label">Years Exp.</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">~20%</div>
+          <div class="stat-label">Uptime Gain</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">~30%</div>
+          <div class="stat-label">Risk Reduced</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">3</div>
+          <div class="stat-label">Certifications</div>
+        </div>
+      </div>
+    </div>
+    <div class="avatar-card">
+      <div class="avatar-circle">AN</div>
+      <div class="avatar-name">Adesh Navale</div>
+      <div class="avatar-role">System Administrator</div>
+      <div class="avatar-divider"></div>
+      <div class="avatar-location">📍 Pune, Maharashtra, India</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Skills -->
+<section class="section fade-in" id="skills">
+  <div class="section-label">Core Competencies</div>
+  <div class="section-title">Technical Skills</div>
+  <div class="skills-grid">
+    <div class="skill-card"><div class="skill-icon">🖥️</div><div class="skill-name">Windows Server</div></div>
+    <div class="skill-card"><div class="skill-icon">🐧</div><div class="skill-name">Linux Administration</div></div>
+    <div class="skill-card"><div class="skill-icon">☁️</div><div class="skill-name">Microsoft Azure (AZ-900)</div></div>
+    <div class="skill-card"><div class="skill-icon">🔐</div><div class="skill-name">Active Directory & GPO</div></div>
+    <div class="skill-card"><div class="skill-icon">📧</div><div class="skill-name">Microsoft 365</div></div>
+    <div class="skill-card"><div class="skill-icon">🌐</div><div class="skill-name">Google Workspace</div></div>
+    <div class="skill-card"><div class="skill-icon">🛡️</div><div class="skill-name">MFA & Security Policies</div></div>
+    <div class="skill-card"><div class="skill-icon">🌍</div><div class="skill-name">DNS / DHCP / VPN</div></div>
+    <div class="skill-card"><div class="skill-icon">🔥</div><div class="skill-name">Firewall Management</div></div>
+    <div class="skill-card"><div class="skill-icon">💾</div><div class="skill-name">Backup & Recovery</div></div>
+    <div class="skill-card"><div class="skill-icon">📡</div><div class="skill-name">Network Administration</div></div>
+    <div class="skill-card"><div class="skill-icon">🚨</div><div class="skill-name">Incident Management</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Experience -->
+<section class="section fade-in" id="experience">
+  <div class="section-label">Work History</div>
+  <div class="section-title">Professional Experience</div>
+  <div class="exp-timeline">
+    <div class="exp-item">
+      <div class="exp-header">
+        <div class="exp-title">IT Support Engineer</div>
+        <div class="exp-badge">Jan 2024 – Present</div>
+      </div>
+      <div class="exp-company">Bon Technology Pvt. Ltd., Pune</div>
+      <ul class="exp-bullets">
+        <li>Managed and maintained Windows and Linux servers, implementing proactive monitoring that improved system uptime by <strong>~20%</strong>.</li>
+        <li>Administered Active Directory including users, groups, and GPOs, reducing access-related incidents by <strong>~25%</strong>.</li>
+        <li>Deployed MFA and hardened security policies, cutting unauthorized access risks by <strong>~30%</strong>.</li>
+        <li>Diagnosed and resolved server, DNS, VPN, and network issues, reducing infrastructure downtime by <strong>~15%</strong>.</li>
+        <li>Streamlined IT onboarding and offboarding workflows, improving process efficiency by <strong>~20%</strong>.</li>
+        <li>Executed backup and disaster recovery operations, maintaining <strong>99%+ data reliability</strong> across critical systems.</li>
+        <li>Managed Microsoft 365 and Google Workspace — licenses, configurations, and user support.</li>
+        <li>Contributed to early-stage <strong>Azure cloud migration</strong> assessments including resource planning and Azure AD integration.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Achievements -->
+<section class="section fade-in" id="achievements">
+  <div class="section-label">Highlights</div>
+  <div class="section-title">Key Achievements</div>
+  <div class="achievements-grid">
+    <div class="ach-card">
+      <div class="ach-icon">📈</div>
+      <div class="ach-title">Improved System Uptime</div>
+      <div class="ach-desc">Boosted infrastructure reliability through systematic monitoring and preventive maintenance strategies.</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-icon">🔒</div>
+      <div class="ach-title">Strengthened Security</div>
+      <div class="ach-desc">Deployed MFA and enforced least-privilege access control across all user accounts organization-wide.</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-icon">⚡</div>
+      <div class="ach-title">Faster Incident Resolution</div>
+      <div class="ach-desc">Reduced average incident resolution time through improved ticketing workflows and root-cause documentation.</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-icon">☁️</div>
+      <div class="ach-title">Azure Migration Planning</div>
+      <div class="ach-desc">Led migration planning for on-premises workloads to Microsoft Azure, contributing to cost and scalability analysis.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Education & Certifications -->
+<section class="section fade-in" id="education">
+  <div class="section-label">Background</div>
+  <div class="section-title">Education & Certifications</div>
+
+  <div class="edu-grid" style="margin-bottom: 3rem;">
+    <div class="edu-card">
+      <div class="edu-degree">MCA – Master of Computer Applications</div>
+      <div class="edu-school">Ajeenkya DY Patil University, Pune</div>
+      <div class="edu-year">2022 – 2024</div>
+    </div>
+    <div class="edu-card">
+      <div class="edu-degree">BCA – Bachelor of Computer Applications</div>
+      <div class="edu-school">C.T. Bora College</div>
+      <div class="edu-year">2019 – 2022</div>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-bottom: 1rem;">Certifications</div>
+  <div class="cert-list">
+    <div class="cert-item">
+      <div class="cert-dot"></div>
+      <div class="cert-name">Certified Ethical Hacker (CEH)</div>
+    </div>
+    <div class="cert-item">
+      <div class="cert-dot"></div>
+      <div class="cert-name">Microsoft Active Directory Certification</div>
+    </div>
+    <div class="cert-item">
+      <div class="cert-dot"></div>
+      <div class="cert-name">Microsoft Azure Fundamentals (AZ-900)</div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  Built for <span>Adesh Navale</span> · System Administrator · Pune, India
+</footer>
+
+<script>
+// Matrix rain
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+let cols, drops;
+const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ01アドミン';
+
+function initMatrix() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const fontSize = 13;
+  cols = Math.floor(canvas.width / fontSize);
+  drops = Array(cols).fill(1);
+}
+
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(6,13,6,0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#00e676';
+  ctx.font = '13px JetBrains Mono, monospace';
+  for (let i = 0; i < drops.length; i++) {
+    const char = chars[Math.floor(Math.random() * chars.length)];
+    ctx.fillText(char, i * 13, drops[i] * 13);
+    if (drops[i] * 13 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  }
+}
+
+initMatrix();
+window.addEventListener('resize', initMatrix);
+setInterval(drawMatrix, 60);
+
+// Scroll fade-in
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
